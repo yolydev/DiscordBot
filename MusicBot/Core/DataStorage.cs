@@ -21,6 +21,7 @@ namespace MusicBot.Core
             string json = File.ReadAllText(filePath);
             return JsonConvert.DeserializeObject<List<UserAccount>>(json);
         }
+
         public static bool SaveExists(string filePath)
         {
             return File.Exists(filePath);
