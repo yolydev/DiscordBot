@@ -24,7 +24,7 @@ namespace MusicBot.Modules
             var embed = new EmbedBuilder();
 
             try
-            { 
+            {
                 var summoner = api.SummonerV4.GetBySummonerName(Region.EUW, username);
 
                 //Summoner Basic Inforamtion
