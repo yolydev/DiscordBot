@@ -37,15 +37,15 @@ namespace MusicBot.Modules.Profiles
 
             var userAvatar = userMention.GetAvatarUrl();
 
-            var embed = new EmbedBuilder();
-            embed.WithTitle("**YOUR AWESOME PROFILE**");
-            embed.AddField(userName + " Name", userMention.Username);
-            embed.AddField(this.userRoles + " Roles", allUserRoles.Replace("@everyone", string.Empty), true);
-            embed.AddField(userRep + " Reputation", userAccount.Reputation, true);
-            embed.AddField(accountCreated + " Account created", userMention.CreatedAt.DayOfWeek + ", " + userMention.CreatedAt.LocalDateTime);
-            embed.AddField(userJoinedDate + " Joined At", userMention.JoinedAt.Value.DayOfWeek + ", " + userMention.JoinedAt.Value.LocalDateTime);
-            embed.WithColor(new Color(237, 61, 125));
-            embed.WithThumbnailUrl(userAvatar);
+            var embed = new EmbedBuilder()
+                .WithTitle("**YOUR AWESOME PROFILE**")
+                .AddField(userName + " Name", userMention.Username)
+                .AddField(this.userRoles + " Roles", allUserRoles.Replace("@everyone", string.Empty), true)
+                .AddField(userRep + " Reputation", userAccount.Reputation, true)
+                .AddField(accountCreated + " Account created", userMention.CreatedAt.DayOfWeek + ", " + userMention.CreatedAt.LocalDateTime)
+                .AddField(userJoinedDate + " Joined At", userMention.JoinedAt.Value.DayOfWeek + ", " + userMention.JoinedAt.Value.LocalDateTime)
+                .WithColor(new Color(237, 61, 125))
+                .WithThumbnailUrl(userAvatar);
 
             await Context.Channel.SendMessageAsync(embed: embed.Build());
         }

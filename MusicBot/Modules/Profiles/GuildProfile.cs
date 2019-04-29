@@ -23,14 +23,14 @@ namespace MusicBot.Modules.Profiles
                 roleString += guilds.Name + ", ";
             }
 
-            var embed = new EmbedBuilder();
-            embed.WithTitle("**ABOUT THIS SERVER**");
-            embed.AddField("Name", guild.Name);
-            embed.AddField("Server stats", guild.MemberCount + " members chatting in\n" + textChannel + " " + guild.TextChannels.Count + " Text Channel/s &\n" + voiceChannel + " " + guild.VoiceChannels.Count + " Voice Channel/s.", true);
-            embed.AddField("Owner", guild.Owner.Username, true);
-            embed.AddField("Roles", roleString);
-            embed.AddField(creationDate + " Creation date", guild.CreatedAt.DayOfWeek + ", " + guild.CreatedAt.LocalDateTime, true);
-            embed.WithColor(new Color(237, 61, 125));
+            var embed = new EmbedBuilder()
+                .WithTitle("**ABOUT THIS SERVER**")
+                .AddField("Name", guild.Name)
+                .AddField("Server stats", guild.MemberCount + " members chatting in\n" + textChannel + " " + guild.TextChannels.Count + " Text Channel/s &\n" + voiceChannel + " " + guild.VoiceChannels.Count + " Voice Channel/s.", true)
+                .AddField("Owner", guild.Owner.Username, true)
+                .AddField("Roles", roleString)
+                .AddField(creationDate + " Creation date", guild.CreatedAt.DayOfWeek + ", " + guild.CreatedAt.LocalDateTime, true)
+                .WithColor(new Color(237, 61, 125));
 
             await Context.Channel.SendMessageAsync(embed: embed.Build());
         }
