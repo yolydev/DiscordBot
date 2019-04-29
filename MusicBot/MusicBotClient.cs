@@ -22,7 +22,7 @@ namespace MusicBot
             _client = client ?? new DiscordSocketClient(new DiscordSocketConfig {
                 AlwaysDownloadUsers = true,
                 MessageCacheSize = 50,
-                LogLevel = Discord.LogSeverity.Debug
+                LogLevel = LogSeverity.Debug
             });
 
             _cmdService = cmdService ?? new CommandService(new CommandServiceConfig {

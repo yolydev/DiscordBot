@@ -47,7 +47,7 @@ namespace MusicBot.Modules.Profiles
             embed.WithColor(new Color(237, 61, 125));
             embed.WithThumbnailUrl(userAvatar);
 
-            await Context.Channel.SendMessageAsync("", false, embed.Build());
+            await Context.Channel.SendMessageAsync(embed: embed.Build());
         }
     }
 }

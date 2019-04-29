@@ -13,7 +13,7 @@ namespace MusicBot.Modules
 {
     public class League : ModuleBase<SocketCommandContext>
     {
-        RiotApi api = RiotApi.NewInstance(Config.bot.riotToken);
+        readonly RiotApi api = RiotApi.NewInstance(Config.bot.riotToken);
 
         [Command("elo")]
         public async Task GetElo([Remainder]string username)
@@ -106,7 +106,7 @@ namespace MusicBot.Modules
                         embed.AddField(summonerName + " currently in game.", "Howling Abyss");
                 }
                 embed.WithFooter("Reviewed by " + Context.User.Username, Context.User.GetAvatarUrl());
-                await Context.Channel.SendMessageAsync("", false, embed.Build());
+                await Context.Channel.SendMessageAsync(embed: embed.Build());
             }
             catch (Exception ex)
             {

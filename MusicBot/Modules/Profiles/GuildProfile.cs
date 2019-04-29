@@ -32,7 +32,7 @@ namespace MusicBot.Modules.Profiles
             embed.AddField(creationDate + " Creation date", guild.CreatedAt.DayOfWeek + ", " + guild.CreatedAt.LocalDateTime, true);
             embed.WithColor(new Color(237, 61, 125));
 
-            await Context.Channel.SendMessageAsync("", false, embed.Build());
+            await Context.Channel.SendMessageAsync(embed: embed.Build());
         }
     }
 }

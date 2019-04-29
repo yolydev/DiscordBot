@@ -22,7 +22,7 @@ namespace MusicBot.Services
             _client = client;
             _lavaRestClient = lavaRestClient;
             _lavaSocketClient = lavaSocketClient;
-        } 
+        }
 
         public Task InitializeAsync()
         {
