@@ -130,6 +130,7 @@ namespace MusicBot.Services
             {
                 count++;
             }
+
             return $"Currently there are **{count}** songs in queue.";
         }
 

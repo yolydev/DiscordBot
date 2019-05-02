@@ -51,8 +51,4 @@ namespace MusicBot.Modules.Profiles.Reputation
             await Context.Channel.SendMessageAsync("**" + user.Username + "** just had reputation removed from " + Context.User.Username + "!");
         }
     }
-
-    internal interface IList<T1, T2>
-    {
-    }
 }
