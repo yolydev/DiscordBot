@@ -30,12 +30,14 @@ namespace MusicBot.Modules
                 //Summoner Basic Inforamtion
 
                 var summonerName = summoner.Name;
-                var summonerID = summoner.Id;
+                var summonerId = summoner.Id;
                 var summonerLevel = summoner.SummonerLevel;
+                var summonerIconURL = "http://avatar.leagueoflegends.com/euw/" + summonerName.Replace(' ', '+') + ".png";
+                Console.WriteLine(summonerIconURL);
 
                 //Summoner League Information
 
-                var summonerLeague = api.LeagueV4.GetAllLeaguePositionsForSummoner(Region.EUW, summonerID);
+                var summonerLeague = api.LeagueV4.GetAllLeaguePositionsForSummoner(Region.EUW, summonerId);
                 var tier = "";
                 var rank = "";
                 var leagueName = "";
@@ -44,6 +46,11 @@ namespace MusicBot.Modules
                 int losses = 0;
                 int total = 0;
                 double ratio = 0;
+
+                var tier_flex = "";
+                var rank_flex = "";
+                var leagueName_flex = "";
+                var leaguePoints_flex = 0;
 
                 foreach (var summonerElo in summonerLeague)
                 {
@@ -56,10 +63,24 @@ namespace MusicBot.Modules
                         wins = summonerElo.Wins;
                         losses = summonerElo.Losses;
                     }
-                }
 
-                //Summoner Champion Information
-                
+                    if (summonerElo.QueueType == "RANKED_FLEX_5x5")
+                    {
+                        tier_flex = summonerElo.Tier;
+                        rank_flex = summonerElo.Rank;
+                        leagueName_flex = summonerElo.LeagueName;
+                        leaguePoints_flex = summonerElo.LeaguePoints;
+                    }
+                }
+                //if (rank_flex is null || tier_flex is null)
+                //    tier_flex = "Unranked ";
+
+                if (tier == "")
+                    tier = "Unranked";
+
+                if (tier_flex == "")
+                    tier_flex = "Unranked ";
+
                 var masteries = api.ChampionMasteryV4.GetAllChampionMasteries(Region.EUW, summoner.Id);
                 var result = "";
                 for (var i = 0; i < 5; i++)
@@ -73,7 +94,7 @@ namespace MusicBot.Modules
                 long mapID = 0;
                 try
                 {
-                    var currentGame = api.SpectatorV4.GetCurrentGameInfoBySummoner(Region.EUW, summonerID);
+                    var currentGame = api.SpectatorV4.GetCurrentGameInfoBySummoner(Region.EUW, summonerId);
                     gameID = currentGame.GameId;
                     mapID = currentGame.MapId;
                 }
@@ -86,8 +107,8 @@ namespace MusicBot.Modules
                 ratio = Convert.ToDouble(String.Format("{0:.##}", ((double)wins / (double)total) * 100));
 
                 embed.WithTitle("**" + username + "'s League Information**");
-                embed.WithThumbnailUrl(userAvatar);
-                embed.AddField("Profile", $"**Tier: **{tier} {rank} \n**Points: **{leaguePoints}LP\n **Win/Loss: **{wins}W / {losses}L\n **Win Ratio: **{ratio}%\n **League: **{leagueName}\n", true);
+                embed.WithThumbnailUrl(summonerIconURL);
+                embed.AddField("Profile", $"**Solo/Duo: **{tier} {rank} **with** {leaguePoints}LP\n**Flex5v5: **{tier_flex} {rank_flex} **with** {leaguePoints_flex}LP \n**Win/Loss: **{wins}W / {losses}L\n **Win Ratio: **{ratio}%\n **League: **{leagueName}\n", true);
                 embed.AddField("Top Champions", result, true);
                 embed.AddField("** **", "** **");
                 if (gameID is 0)

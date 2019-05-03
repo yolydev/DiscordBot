@@ -10,28 +10,23 @@ using JikanDotNet;
 
 namespace MusicBot.Modules
 {
-    public class MyAnimeList : ModuleBase<SocketCommandContext>
+    public class Anime : ModuleBase<SocketCommandContext>
     {
         [Command("anime")]
         public async Task SearchAnime([Remainder] string anime)
         {
             IJikan jikan = new Jikan(true);
-
             AnimeSearchResult animeSearch = await jikan.SearchAnime(anime);
-            
-            var animeTitle = animeSearch.Results.First().Title;
-            var animeURL = animeSearch.Results.First().URL;
-            //var animeMALId = a.Results.First().MalId;
-            var animeDesc = animeSearch.Results.First().Description;
-            var animeImageURL = animeSearch.Results.First().ImageURL;
 
+            var result = animeSearch.Results.First();
 
             var embed = new EmbedBuilder()
-                .WithTitle($"{animeTitle}")
-                .AddField("Description", animeDesc)
-                .AddField($"** **", $"My Anime List: [{animeTitle}]({animeURL})")
+                .WithTitle($"{result.Title}")
+                .AddField("Description", result.Description)
+                .AddField("Info", $"**{result.Episodes}** Episodes - {result.StartDate.Value.DayOfWeek}, {result.StartDate.Value.Day}.{result.StartDate.Value.Month}.{result.StartDate.Value.Year} **to** {result.EndDate.Value.DayOfWeek}, {result.EndDate.Value.Day}.{result.EndDate.Value.Month}.{result.EndDate.Value.Year}")
+                .AddField($"** **", $"My Anime List: [{result.Title}]({result.URL})")
                 .WithColor(new Color(237, 61, 125))
-                .WithThumbnailUrl(animeImageURL);
+                .WithThumbnailUrl(result.ImageURL);
 
             await Context.Channel.SendMessageAsync(embed: embed.Build());
         }

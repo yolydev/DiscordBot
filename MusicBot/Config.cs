@@ -36,5 +36,6 @@ namespace MusicBot
     {
         public string discordToken;
         public string riotToken;
+        public string TMDbToken;
     }
 }
