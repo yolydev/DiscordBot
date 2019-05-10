@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +33,7 @@ namespace MusicBot
         private async Task HandleMessageAsync(SocketMessage msg)
         {
             Console.WriteLine(msg.Author + ": " + msg.Content);
+            SaveLog(msg);
 
             var argPos = 0;
             if (msg.Author.IsBot) return;
@@ -45,6 +47,20 @@ namespace MusicBot
 
             var context = new SocketCommandContext(_client, userMessage);
             var result = await _cmdService.ExecuteAsync(context, argPos, _services);
+        }
+
+        private void SaveLog(SocketMessage msg)
+        {
+            var dateTime = DateTime.Now;
+            var guildChannel = msg.Channel as SocketGuildChannel;
+
+            var file = $"logs/{DateTime.Now.Year}-{DateTime.Now.Month}-{DateTime.Now.Day}.txt";
+            if (!File.Exists(file))
+                File.Create(file);
+            //if (!File.Exists("log.txt"))
+            //    File.Create("log.txt");
+
+            File.AppendAllText(file, $"[{dateTime}] ({guildChannel.Guild.Name}) #{msg.Channel} - {msg.Author}: {msg.Content}" + Environment.NewLine);
         }
 
         private Task LogAsync(LogMessage logMessage)

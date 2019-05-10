@@ -32,7 +32,7 @@ namespace MusicBot.Modules.Profiles
                 if (userMention.Roles.Count == 1)
                     allUserRoles = "None";
                 else
-                    allUserRoles += roles.Name + "\n";
+                    allUserRoles += roles.Mention + "\n";
             }
 
             var userAvatar = userMention.GetAvatarUrl();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -33,7 +34,6 @@ namespace MusicBot.Modules
                 var summonerId = summoner.Id;
                 var summonerLevel = summoner.SummonerLevel;
                 var summonerIconURL = "http://avatar.leagueoflegends.com/euw/" + summonerName.Replace(' ', '+') + ".png";
-                Console.WriteLine(summonerIconURL);
 
                 //Summoner League Information
 
@@ -47,10 +47,15 @@ namespace MusicBot.Modules
                 int total = 0;
                 double ratio = 0;
 
-                var tier_flex = "";
-                var rank_flex = "";
-                var leagueName_flex = "";
-                var leaguePoints_flex = 0;
+                var tier_flex5v5 = "";
+                var rank_flex5v5 = "";
+                var leagueName_flex5v5 = "";
+                var leaguePoints_flex5v5 = 0;
+
+                var tier_flex3v3 = "";
+                var rank_flex3v3 = "";
+                var leagueName_flex3v3 = "";
+                var leaguePoints_flex3v3 = 0;
 
                 foreach (var summonerElo in summonerLeague)
                 {
@@ -66,20 +71,29 @@ namespace MusicBot.Modules
 
                     if (summonerElo.QueueType == "RANKED_FLEX_5x5")
                     {
-                        tier_flex = summonerElo.Tier;
-                        rank_flex = summonerElo.Rank;
-                        leagueName_flex = summonerElo.LeagueName;
-                        leaguePoints_flex = summonerElo.LeaguePoints;
+                        tier_flex5v5 = summonerElo.Tier;
+                        rank_flex5v5 = summonerElo.Rank;
+                        leagueName_flex5v5 = summonerElo.LeagueName;
+                        leaguePoints_flex5v5 = summonerElo.LeaguePoints;
+                    }
+
+                    if (summonerElo.QueueType == "RANKED_FLEX_TT")
+                    {
+                        tier_flex3v3 = summonerElo.Tier;
+                        rank_flex3v3 = summonerElo.Rank;
+                        leagueName_flex3v3 = summonerElo.LeagueName;
+                        leaguePoints_flex3v3 = summonerElo.LeaguePoints;
                     }
                 }
-                //if (rank_flex is null || tier_flex is null)
-                //    tier_flex = "Unranked ";
 
                 if (tier == "")
                     tier = "Unranked";
 
-                if (tier_flex == "")
-                    tier_flex = "Unranked ";
+                if (tier_flex5v5 == "")
+                    tier_flex5v5 = "Unranked ";
+
+                if(tier_flex3v3 == "")
+                    tier_flex3v3 = "Unranked";
 
                 var masteries = api.ChampionMasteryV4.GetAllChampionMasteries(Region.EUW, summoner.Id);
                 var result = "";
@@ -89,6 +103,39 @@ namespace MusicBot.Modules
                     var champ = (Champion)mastery.ChampionId;
                     result += $"**{champ.Name()}** {mastery.ChampionPoints} ({mastery.ChampionLevel})\n";
                 }
+
+                total = wins + losses;
+                ratio = Convert.ToDouble(String.Format("{0:.##}", ((double)wins / (double)total) * 100));
+
+                embed.WithTitle("**" + username + "'s League Information**");
+                embed.WithThumbnailUrl(summonerIconURL);
+                embed.AddField("Profile", $"**Solo/Duo: **{tier} {rank} **with** {leaguePoints}LP\n" +
+                    $"**Flex5v5: **{tier_flex5v5} {rank_flex5v5} **with** {leaguePoints_flex5v5}LP\n" +
+                    $"**Flex3v3: **{tier_flex3v3} {rank_flex3v3} **with** {leaguePoints_flex3v3}LP\n" +
+                    $"**Win/Loss: **{wins}W / {losses}L\n **Win Ratio: **{ratio}%\n **League: **{leagueName}\n", true);
+                embed.AddField("Top Champions", result, true);
+                embed.AddField("** **", "** **");
+                
+                var matchList = await api.MatchV4.GetMatchlistAsync(Region.EUW, summoner.AccountId, queue: new[] { 420 }, endIndex: 5);
+                var matchDataTasks = matchList.Matches.Select(matchMetaData => api.MatchV4.GetMatchAsync(Region.EUW, matchMetaData.GameId)).ToArray();
+                var matchDatas = await Task.WhenAll(matchDataTasks);
+                var history = "";
+                for(var i = 0; i < matchDatas.Count(); i++)
+                {
+                    var matchData = matchDatas[i];
+                    var participantIdData = matchData.ParticipantIdentities
+                        .First(pi => summoner.Id.Equals(pi.Player.SummonerId));
+                    var participant = matchData.Participants.First(p => p.ParticipantId == participantIdData.ParticipantId);
+
+                    var win = participant.Stats.Win;
+                    var champ = (Champion)participant.ChampionId;
+                    var k = participant.Stats.Kills;
+                    var d = participant.Stats.Deaths;
+                    var a = participant.Stats.Assists;
+                    var kda = (k + a) / (float)d;
+                    history += win ? $"Win - {champ.Name()}: {k}/{d}/{a}\n" : $"Loss - {champ.Name()}: {k}/{d}/{a}\n";
+                }
+                embed.AddField("Recent Games", history, true);
 
                 long gameID = 0;
                 long mapID = 0;
@@ -103,29 +150,22 @@ namespace MusicBot.Modules
                     Console.WriteLine(ex.Message);
                 }
 
-                total = wins + losses;
-                ratio = Convert.ToDouble(String.Format("{0:.##}", ((double)wins / (double)total) * 100));
-
-                embed.WithTitle("**" + username + "'s League Information**");
-                embed.WithThumbnailUrl(summonerIconURL);
-                embed.AddField("Profile", $"**Solo/Duo: **{tier} {rank} **with** {leaguePoints}LP\n**Flex5v5: **{tier_flex} {rank_flex} **with** {leaguePoints_flex}LP \n**Win/Loss: **{wins}W / {losses}L\n **Win Ratio: **{ratio}%\n **League: **{leagueName}\n", true);
-                embed.AddField("Top Champions", result, true);
-                embed.AddField("** **", "** **");
                 if (gameID is 0)
                 {
-                    embed.AddField(summonerName + " currently not in game", "-");
+                    embed.AddField(summonerName + " currently not in game", "-", true);
                 }
                 else
                 {
                     if (mapID is 11)
-                        embed.AddField(summonerName + " currently in game.", "Summoner's Rift");
+                        embed.AddField(summonerName + " currently in game.", "Summoner's Rift", true);
 
                     if (mapID is 10)
-                        embed.AddField(summonerName + " currently in game.", "Twisted Treeline");
+                        embed.AddField(summonerName + " currently in game.", "Twisted Treeline", true);
 
                     if (mapID is 12)
-                        embed.AddField(summonerName + " currently in game.", "Howling Abyss");
+                        embed.AddField(summonerName + " currently in game.", "Howling Abyss", true);
                 }
+
                 embed.WithFooter("Reviewed by " + Context.User.Username, Context.User.GetAvatarUrl());
                 await Context.Channel.SendMessageAsync(embed: embed.Build());
             }

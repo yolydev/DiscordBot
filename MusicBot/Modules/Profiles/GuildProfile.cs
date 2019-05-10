@@ -20,8 +20,10 @@ namespace MusicBot.Modules.Profiles
             var roleString = "";
             foreach (var guilds in guild.Roles)
             {
-                roleString += guilds.Name + ", ";
+                roleString += guilds.Mention + ", ";
             }
+
+            var guildIcon = guild.IconUrl;
 
             var embed = new EmbedBuilder()
                 .WithTitle("**ABOUT THIS SERVER**")
@@ -30,7 +32,8 @@ namespace MusicBot.Modules.Profiles
                 .AddField("Owner", guild.Owner.Username, true)
                 .AddField("Roles", roleString)
                 .AddField(creationDate + " Creation date", guild.CreatedAt.DayOfWeek + ", " + guild.CreatedAt.LocalDateTime, true)
-                .WithColor(new Color(237, 61, 125));
+                .WithColor(new Color(237, 61, 125))
+                .WithThumbnailUrl(guildIcon);
 
             await Context.Channel.SendMessageAsync(embed: embed.Build());
         }

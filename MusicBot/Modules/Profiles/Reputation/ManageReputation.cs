@@ -1,6 +1,7 @@
 ﻿using Discord.Commands;
 using Discord.WebSocket;
 using MusicBot.Core.UserAccounts;
+using MusicBot.Preconditions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,7 +13,7 @@ namespace MusicBot.Modules.Profiles.Reputation
     {
         //Add emote to Reputation message and cooldown
 
-        [Command("+rep")]
+        [Command("+rep"), Cooldown(10800)]
         public async Task GiveRep([Remainder] SocketGuildUser user)
         {
             var userAccount = UserAccounts.GetAccount(user);
@@ -28,7 +29,7 @@ namespace MusicBot.Modules.Profiles.Reputation
             await Context.Channel.SendMessageAsync("**" + user.Username + "** just got reputation from " + Context.User.Username + "!");
         }
 
-        [Command("-rep")]
+        [Command("-rep"), Cooldown(10800)]
         public async Task TakeRep([Remainder] SocketGuildUser user)
         {
             var userAccount = UserAccounts.GetAccount(user);

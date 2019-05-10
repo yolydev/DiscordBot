@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
@@ -11,13 +12,13 @@ using Victoria;
 
 namespace MusicBot
 {
-    public class MusicBotClient
+    public class Client
     {
         private DiscordSocketClient _client;
         private CommandService _cmdService;
         private IServiceProvider _services;
-
-        public MusicBotClient(DiscordSocketClient client = null, CommandService cmdService = null)
+                
+        public Client(DiscordSocketClient client = null, CommandService cmdService = null)
         {
             _client = client ?? new DiscordSocketClient(new DiscordSocketConfig {
                 AlwaysDownloadUsers = true,
@@ -35,21 +36,26 @@ namespace MusicBot
         {
             await _client.LoginAsync(TokenType.Bot, Config.bot.discordToken); 
             await _client.StartAsync();
-            _client.Log += LogAsync;
+
+            HookEvents();
             _services = SetupServices();
 
             var cmdHandler = new CommandHandler(_client, _cmdService, _services);
+
             await cmdHandler.InitializeAsync();
-
             await _services.GetRequiredService<MusicService>().InitializeAsync();
-
             await Task.Delay(-1);
         }
 
-        private Task LogAsync(LogMessage logMessage)
+        private void HookEvents()
         {
-            Console.WriteLine(logMessage.Message);
-            return Task.CompletedTask;
+            _client.Ready += OnReady;
+            _client.Log += LogAsync;
+        }
+
+        private async Task OnReady()
+        {
+            await _client.SetGameAsync("ur mom nigga", "https://www.twitch.tv/ehasywhin", ActivityType.Streaming);
         }
 
         private IServiceProvider SetupServices()
@@ -60,5 +66,13 @@ namespace MusicBot
             .AddSingleton<LavaSocketClient>()
             .AddSingleton<MusicService>()
             .BuildServiceProvider();
+
+        //Logging
+
+        private Task LogAsync(LogMessage logMessage)
+        {
+            Console.WriteLine(logMessage.Message);
+            return Task.CompletedTask;
+        }
     }
 }
