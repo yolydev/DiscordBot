@@ -52,7 +52,7 @@ namespace MusicBot.Preconditions
                 // Display message if command is on cooldown
                 if (difference.Ticks > 0)
                 {
-                    context.Channel.SendMessageAsync($"{context.User.Mention}, you can use this command again in {difference.ToString(@"h\.mm\.ss")}");
+                    context.Channel.SendMessageAsync($"{context.User.Mention}, you can use this command again in {difference.Hours} Hours, {difference.Minutes} Minutes and {difference.Seconds} Seconds.");
                     return Task.FromResult(PreconditionResult.FromError($"You can use this command in {difference.ToString(@"mm\:ss")}"));
                 }
                 // Update cooldown time

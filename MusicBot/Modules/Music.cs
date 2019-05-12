@@ -35,6 +35,23 @@ namespace MusicBot.Modules
             }
         }
 
+        [Command("move")]
+        public async Task Move()
+        {
+            var user = Context.User as SocketGuildUser;
+            if (user.VoiceChannel is null)
+            {
+                await ReplyAsync("You must be connected to a voice channel.");
+                return;
+            }
+            else
+            {
+                await _musicService.DisconnectAsync(user.VoiceChannel);
+                await _musicService.ConnectAsync(user.VoiceChannel, Context.Channel as ITextChannel);
+                await ReplyAsync($"Bot moved to **{user.VoiceChannel.Name}** voice channel.");
+            }
+        }
+
         [Command("leave")]
         public async Task Leave()
         {
