@@ -32,7 +32,7 @@ namespace MusicBot
 
         private async Task HandleMessageAsync(SocketMessage msg)
         {
-            Console.WriteLine(msg.Author + ": " + msg.Content);
+            //Console.WriteLine(msg.Author + ": " + msg.Content);
             SaveLog(msg);
 
             var argPos = 0;
