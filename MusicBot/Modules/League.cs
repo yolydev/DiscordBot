@@ -14,7 +14,8 @@ namespace MusicBot.Modules
 {
     public class League : ModuleBase<SocketCommandContext>
     {
-        readonly RiotApi api = RiotApi.NewInstance(Config.bot.riotToken);
+        private Emoji note = new Emoji("🗒️");
+        private Emoji trophy = new Emoji("🏆");
 
         [Command("elo")]
         public async Task GetElo([Remainder]string username)
@@ -22,105 +23,39 @@ namespace MusicBot.Modules
             SocketGuildUser user = (SocketGuildUser)Context.User;
             var userAvatar = user.GetAvatarUrl();
 
-            var embed = new EmbedBuilder();
-
             try
             {
-                var summoner = api.SummonerV4.GetBySummonerName(Region.EUW, username);
+                #region Basic Info
+                var riotApi = RiotApi.NewInstance("RGAPI-02e78403-19d6-416f-af19-029fe82dfa59");
 
-                //Summoner Basic Inforamtion
+                var summoner = riotApi.SummonerV4.GetBySummonerName(Region.EUW, username);
+                var summonerIconURL = "https://avatar.leagueoflegends.com/euw/" + summoner.Name.Replace(' ', '+') + ".png";
+                #endregion
 
-                var summonerName = summoner.Name;
-                var summonerId = summoner.Id;
-                var summonerLevel = summoner.SummonerLevel;
-                var summonerIconURL = "http://avatar.leagueoflegends.com/euw/" + summonerName.Replace(' ', '+') + ".png";
+                #region Summoner Rankings
+                var ranks = riotApi.LeagueV4.GetLeagueEntriesForSummoner(Region.EUW, summoner.Id);
+                var soloDuo = ranks.FirstOrDefault(x => x.QueueType == "RANKED_SOLO_5x5");
 
-                //Summoner League Information
+                var winRatio = Convert.ToDouble(String.Format("{0:.##}", ((double)soloDuo.Wins / (double)(soloDuo.Wins+soloDuo.Losses)) * 100));
+                #endregion
 
-                var summonerLeague = api.LeagueV4.GetAllLeaguePositionsForSummoner(Region.EUW, summonerId);
-                var tier = "";
-                var rank = "";
-                var leagueName = "";
-                var leaguePoints = 0;
-                int wins = 0;
-                int losses = 0;
-                int total = 0;
-                double ratio = 0;
-
-                var tier_flex5v5 = "";
-                var rank_flex5v5 = "";
-                var leagueName_flex5v5 = "";
-                var leaguePoints_flex5v5 = 0;
-
-                var tier_flex3v3 = "";
-                var rank_flex3v3 = "";
-                var leagueName_flex3v3 = "";
-                var leaguePoints_flex3v3 = 0;
-
-                foreach (var summonerElo in summonerLeague)
-                {
-                    if (summonerElo.QueueType == "RANKED_SOLO_5x5")
-                    {
-                        tier = summonerElo.Tier;
-                        rank = summonerElo.Rank;
-                        leagueName = summonerElo.LeagueName;
-                        leaguePoints = summonerElo.LeaguePoints;
-                        wins = summonerElo.Wins;
-                        losses = summonerElo.Losses;
-                    }
-
-                    if (summonerElo.QueueType == "RANKED_FLEX_5x5")
-                    {
-                        tier_flex5v5 = summonerElo.Tier;
-                        rank_flex5v5 = summonerElo.Rank;
-                        leagueName_flex5v5 = summonerElo.LeagueName;
-                        leaguePoints_flex5v5 = summonerElo.LeaguePoints;
-                    }
-
-                    if (summonerElo.QueueType == "RANKED_FLEX_TT")
-                    {
-                        tier_flex3v3 = summonerElo.Tier;
-                        rank_flex3v3 = summonerElo.Rank;
-                        leagueName_flex3v3 = summonerElo.LeagueName;
-                        leaguePoints_flex3v3 = summonerElo.LeaguePoints;
-                    }
-                }
-
-                if (tier == "")
-                    tier = "Unranked";
-
-                if (tier_flex5v5 == "")
-                    tier_flex5v5 = "Unranked ";
-
-                if(tier_flex3v3 == "")
-                    tier_flex3v3 = "Unranked";
-
-                var masteries = api.ChampionMasteryV4.GetAllChampionMasteries(Region.EUW, summoner.Id);
+                #region Summoner Champions
+                var masteries = riotApi.ChampionMasteryV4.GetAllChampionMasteries(Region.EUW, summoner.Id);
                 var result = "";
-                for (var i = 0; i < 5; i++)
+                for (var i = 0; i < 3; i++)
                 {
                     var mastery = masteries[i];
                     var champ = (Champion)mastery.ChampionId;
-                    result += $"**{champ.Name()}** {mastery.ChampionPoints} ({mastery.ChampionLevel})\n";
+                    result += $"**{champ.Name()}** {mastery.ChampionPoints} pts - lvl {mastery.ChampionLevel}\n";
                 }
+                #endregion
 
-                total = wins + losses;
-                ratio = Convert.ToDouble(String.Format("{0:.##}", ((double)wins / (double)total) * 100));
-
-                embed.WithTitle("**" + username + "'s League Information**");
-                embed.WithThumbnailUrl(summonerIconURL);
-                embed.AddField("Profile", $"**Solo/Duo: **{tier} {rank} **with** {leaguePoints}LP\n" +
-                    $"**Flex5v5: **{tier_flex5v5} {rank_flex5v5} **with** {leaguePoints_flex5v5}LP\n" +
-                    $"**Flex3v3: **{tier_flex3v3} {rank_flex3v3} **with** {leaguePoints_flex3v3}LP\n" +
-                    $"**Win/Loss: **{wins}W / {losses}L\n **Win Ratio: **{ratio}%\n **League: **{leagueName}\n", true);
-                embed.AddField("Top Champions", result, true);
-                embed.AddField("** **", "** **");
-                
-                var matchList = await api.MatchV4.GetMatchlistAsync(Region.EUW, summoner.AccountId, queue: new[] { 420 }, endIndex: 5);
-                var matchDataTasks = matchList.Matches.Select(matchMetaData => api.MatchV4.GetMatchAsync(Region.EUW, matchMetaData.GameId)).ToArray();
+                #region Summoner Recent Games
+                var matchList = await riotApi.MatchV4.GetMatchlistAsync(Region.EUW, summoner.AccountId, queue: new[] { 420 }, endIndex: 3);
+                var matchDataTasks = matchList.Matches.Select(matchMetaData => riotApi.MatchV4.GetMatchAsync(Region.EUW, matchMetaData.GameId)).ToArray();
                 var matchDatas = await Task.WhenAll(matchDataTasks);
                 var history = "";
-                for(var i = 0; i < matchDatas.Count(); i++)
+                for (var i = 0; i < matchDatas.Count(); i++)
                 {
                     var matchData = matchDatas[i];
                     var participantIdData = matchData.ParticipantIdentities
@@ -129,50 +64,212 @@ namespace MusicBot.Modules
 
                     var win = participant.Stats.Win;
                     var champ = (Champion)participant.ChampionId;
-                    var k = participant.Stats.Kills;
-                    var d = participant.Stats.Deaths;
-                    var a = participant.Stats.Assists;
-                    var kda = (k + a) / (float)d;
-                    history += win ? $"Win - {champ.Name()}: {k}/{d}/{a}\n" : $"Loss - {champ.Name()}: {k}/{d}/{a}\n";
+                    var level = participant.Stats.ChampLevel;
+                    var kills = participant.Stats.Kills;
+                    var deaths = participant.Stats.Deaths;
+                    var assists = participant.Stats.Assists;
+                    var visionScore = participant.Stats.VisionScore;
+                    var cs = participant.Stats.TotalMinionsKilled + participant.Stats.NeutralMinionsKilled;
+                    var kda = String.Format("{0:0.##}", (kills + assists) / (float)deaths);
+                    var duration = matchData.GameDuration;
+                    history += win ? $"Win - lvl **{level}** - {champ.Name()} **{kills}**/{deaths}/**{assists}** » ({kda}KDA) - [{cs}**CS** / {visionScore}**VS**]\n": 
+                                     $"Loss - lvl **{level}** - {champ.Name()} **{kills}**/{deaths}/**{assists}** » ({kda}KDA) - [{cs}**CS** / {visionScore}**VS**]\n";
                 }
-                embed.AddField("Recent Games", history, true);
+                #endregion
 
-                long gameID = 0;
-                long mapID = 0;
+                #region Summoner Status
+                /*
+                 * Assets: https://github.com/CommunityDragon/Docs/blob/master/assets.md
+                 * 
+                 * Raw Assets: http://raw.communitydragon.org/latest/
+                 * 
+                 * Rune Infos: http://ddragon.leagueoflegends.com/cdn/9.13.1/data/en_US/runesReforged.json
+                 * 
+                 * Rune Example Image: https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/Electrocute/Electrocute.png
+                */
+                //var currentGame = riotApi.SpectatorV4.GetCurrentGameInfoBySummoner(Region.EUW, summoner.Id);
+
+                //var c = currentGame.Participants;
+
+                //foreach(var a in c)
+                //{
+                //    Console.WriteLine(RunesIdIntoString(a.Perks.PerkStyle) + " - " + RunesIdIntoString(a.Perks.PerkIds[0]) + " - " + RunesIdIntoString(a.Perks.PerkSubStyle));
+                //}
+                var status = "";
                 try
                 {
-                    var currentGame = api.SpectatorV4.GetCurrentGameInfoBySummoner(Region.EUW, summonerId);
-                    gameID = currentGame.GameId;
-                    mapID = currentGame.MapId;
+                    var currentGame = await riotApi.SpectatorV4.GetCurrentGameInfoBySummonerAsync(Region.EUW, summoner.Id);
+                    status = $"In game {currentGame.GameId}";
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    status = "Not in game";
                 }
+                #endregion
 
-                if (gameID is 0)
-                {
-                    embed.AddField(summonerName + " currently not in game", "-", true);
-                }
-                else
-                {
-                    if (mapID is 11)
-                        embed.AddField(summonerName + " currently in game.", "Summoner's Rift", true);
+                #region League Status
+                //var elo = riotApi.LolStatusV3.GetShardData(Region.EUW);
 
-                    if (mapID is 10)
-                        embed.AddField(summonerName + " currently in game.", "Twisted Treeline", true);
+                //Console.WriteLine($"Hostname: {elo.Hostname}\n" +
+                //    $"Name: {elo.Name}\n" +
+                //    $"");
+                #endregion
 
-                    if (mapID is 12)
-                        embed.AddField(summonerName + " currently in game.", "Howling Abyss", true);
-                }
+                #region Leaderboards
+                //var leader = riotApi.LeagueV4.GetChallengerLeague(Region.EUW, Queue.RANKED_SOLO_5x5).Entries;
+                //foreach(var a in leader)
+                //{
+                //    Console.WriteLine("Summoner: " + a.SummonerName + " LP: " + a.LeaguePoints + " Wins: " + a.Wins + " Loss: " + a.Losses);
+                //}
+                #endregion
 
-                embed.WithFooter("Reviewed by " + Context.User.Username, Context.User.GetAvatarUrl());
+                var embed = new EmbedBuilder()
+                    .WithTitle($"*{username}'s league profile*")
+                    .WithColor(new Color(237, 61, 125))
+                    .WithThumbnailUrl(summonerIconURL)
+                    .AddField("Elo",
+                        $"**Solo/Duo** {soloDuo.Tier} {soloDuo.Rank} **|** {soloDuo.LeaguePoints} LP\n\n" +
+                        $"**W/L** {soloDuo.Wins}W / {soloDuo.Losses}L\n" +
+                        $"**Win Ratio** {winRatio}%", true)
+                    .AddField("Champions", $"{result}", true)
+                    .AddField("Status", status)
+                    .AddField("Recent Games", history, true)
+                    .WithFooter("Reviewed by " + Context.User.Username, Context.User.GetAvatarUrl());
                 await Context.Channel.SendMessageAsync(embed: embed.Build());
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                await Context.Channel.SendMessageAsync("Error, please contact an administrator.");
             }
+        }
+
+        public string RunesIdIntoString(long Id)
+        {
+            string rune = "";
+            switch(Id)
+            {
+                /*
+                 * To-Do:
+                 * 
+                 * Check numbers again since new api gave 5 digits on runes reforged (All)
+                 * Also check perks (vars) 0-6
+                */
+                #region Precision
+                case 8000: rune = "Precision"; break;
+                
+                //Keystones
+                case 8005: rune = "Press the Attack"; break;
+                case 8008: rune = "Lethal Tempo"; break;
+                case 8010: rune = "Conquerer"; break;
+                case 8021: rune = "Fleet Footwork"; break;
+                
+                //Extra Perks
+                case 9109: rune = "Overheal"; break;
+                case 9111: rune = "Triumph"; break;
+                case 8009: rune = "Presence of Mind"; break;
+
+                case 9104: rune = "Legend: Alacrity"; break;
+                case 9105: rune = "Legend: Tenacity"; break;
+                case 9103: rune = "Legend: Bloodline"; break;
+
+                case 8014: rune = "Coup de Grace"; break;
+                case 8017: rune = "Cut Down"; break;
+                case 8299: rune = "Last Stand"; break;
+
+                #endregion
+
+                #region Domination
+                case 8100: rune = "Domination"; break;
+
+                //Keystones
+                case 8112: rune = "Electrocute"; break;
+                case 8124: rune = "Predator"; break;
+                case 8128: rune = "Dark Harvest"; break;
+                case 9923: rune = "Hail of Blades"; break;
+
+                //Extra Perks
+                case 8126: rune = "Cheap Shot"; break;
+                case 8139: rune = "Taste of Blood"; break;
+                case 8143: rune = "Sudden Impact"; break;
+
+                case 8136: rune = "Zombie Ward"; break;
+                case 8120: rune = "Ghost Poro"; break;
+                case 8138: rune = "Eyeball Collection"; break;
+
+                case 8135: rune = "Ravenous Hunter"; break;
+                case 8134: rune = "Ingenious Hunter"; break;
+                case 8105: rune = "Relentless Hunter"; break;
+                case 8106: rune = "Ultimate Hunter"; break;
+                #endregion
+
+                #region Sorcery
+                case 8200: rune = "Sorcery"; break;
+
+                //Keystones
+                case 8214: rune = "Summon Aery"; break;
+                case 8229: rune = "Arcane Comet"; break;
+                case 8230: rune = "Phase Rush"; break;
+
+                //Extra Perks
+                case 8224: rune = "Nullifying Orb"; break;
+                case 8226: rune = "Manaflow Band"; break;
+                case 8275: rune = "Nimbus Cloak"; break;
+
+                case 8210: rune = "Transcndence"; break;
+                case 8234: rune = "Celerity"; break;
+                case 8233: rune = "Absolute Focus"; break;
+
+                case 8237: rune = "Scorch"; break;
+                case 8232: rune = "Waterwalking"; break;
+                case 8236: rune = "Gathering Storm"; break;
+                #endregion
+
+                #region Resolve
+                case 8400: rune = "Resolve"; break;
+
+                //Keystones
+                case 8437: rune = "Grasp of the Undying"; break;
+                case 8439: rune = "Aftershock"; break;
+                case 8465: rune = "Guardian"; break;
+
+                //Extra Perks
+                case 8446: rune = "Demolish"; break;
+                case 8462: rune = "Font of Life"; break;
+                case 8401: rune = "Shield Bash"; break;
+
+                case 8429: rune = "Conditioning"; break;
+                case 8444: rune = "Second Wind"; break;
+                case 8473: rune = "Bone Plating"; break;
+
+                case 8451: rune = "Overgrowth"; break;
+                case 8453: rune = "Revitalize"; break;
+                case 8242: rune = "Unflinching"; break;
+                #endregion
+
+                #region Inspiration
+                case 8300: rune = "Inspiration"; break;
+
+                //Keystones
+                case 8351: rune = "Glacial Augment"; break;
+                case 8359: rune = "Kleptomancy"; break;
+                case 8360: rune = "Unsealed Spellbook"; break;
+
+                //Extra Perks
+                case 8306: rune = "Hextech Flashtraption"; break;
+                case 8304: rune = "Magical Footwear"; break;
+                case 8313: rune = "Perfect Timing/"; break;
+
+                case 8321: rune = "Future's Market"; break;
+                case 8316: rune = "Minion Dematerializier"; break;
+                case 8345: rune = "Biscuit Delivery"; break;
+
+                case 8347: rune = "Cosmic Insight"; break;
+                case 8410: rune = "Approach Velocity"; break;
+                case 8352: rune = "Time Warp Tonic"; break;
+                    #endregion
+            }
+            return rune;
         }
     }
 }

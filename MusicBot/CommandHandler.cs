@@ -27,7 +27,24 @@ namespace MusicBot
         {
             await _cmdService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             _cmdService.Log += LogAsync;
+            _client.UserJoined += AnnounceUserJoin;
             _client.MessageReceived += HandleMessageAsync;
+        }
+
+
+        private async Task AnnounceUserJoin(SocketGuildUser user)
+        {
+            var channel = _client.GetChannel(494934565337694222) as SocketTextChannel;
+
+            var embed = new EmbedBuilder()
+               .WithTitle($"Welcome **{user.Username}#{user.DiscriminatorValue}** to the server **{user.Guild.Name}**!")
+               .AddField("**Name**", $"{user.Username}", true)
+               .AddField("**Mutual Guilds**", $"{user.MutualGuilds.Count}", true)
+               .AddField("**Joined Date**", $"{user.JoinedAt.Value.DayOfWeek} {user.JoinedAt.Value.LocalDateTime}")
+               .WithFooter($"There are now currently {user.Guild.MemberCount} User on the server!")
+               .WithColor(new Color(237, 61, 125))
+               .WithThumbnailUrl(user.GetAvatarUrl());
+            await channel.SendMessageAsync(embed: embed.Build());
         }
 
         private async Task HandleMessageAsync(SocketMessage msg)

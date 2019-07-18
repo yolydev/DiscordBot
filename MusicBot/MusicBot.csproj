@@ -8,11 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Colorful.Console" Version="1.2.9" />
-    <PackageReference Include="Discord.Net" Version="2.0.1" />
+    <PackageReference Include="Discord.Net" Version="2.1.1" />
     <PackageReference Include="JikanDotNet" Version="1.2.5" />
-    <PackageReference Include="MingweiSamuel.Camille" Version="2.2.0" />
+    <PackageReference Include="MingweiSamuel.Camille" Version="2.2.1" />
     <PackageReference Include="TMDbLib" Version="1.0.0" />
-    <PackageReference Include="Victoria" Version="4.0.8" />
+    <PackageReference Include="Victoria" Version="4.0.17" />
   </ItemGroup>
 
 </Project>

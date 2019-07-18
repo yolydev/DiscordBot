@@ -50,7 +50,7 @@ namespace MusicBot
         }
 
         private void InitializeConsole()
-        {
+        { 
             const string header = @"
             █▀▀█ █▀▄▀█   █▀▀▄ █░░█ █▀▀▄ █▀▀ █▀▀
             █░░█ █░▀░█   █░░█ █░░█ █░░█ █▀▀ ▀▀█
@@ -58,14 +58,14 @@ namespace MusicBot
             var lineBreak = $"\n{new string('-', 90)}\n";
             var process = Process.GetCurrentProcess();
 
-            Console.WriteLine(header, Color.Teal);
+            Console.WriteLine(header, Color.Plum);
             Console.WriteLine(lineBreak, Color.LightCoral);
             Console.Write("     Runtime: ", Color.Plum);
-            Console.Write($"{RuntimeInformation.FrameworkDescription}\n");
+            Console.Write($"{RuntimeInformation.FrameworkDescription}\n", Color.White);
             Console.Write("     Process: ", Color.Plum);
-            Console.Write($"{process.Id} ID | {process.Threads.Count} Threads\n");
+            Console.Write($"{process.Id} ID | {process.Threads.Count} Threads\n", Color.White);
             Console.Write("          OS: ", Color.Plum);
-            Console.Write($"{RuntimeInformation.OSDescription} | {RuntimeInformation.ProcessArchitecture}\n");
+            Console.Write($"{RuntimeInformation.OSDescription} | {RuntimeInformation.ProcessArchitecture}\n", Color.White);
             Console.WriteLine(lineBreak, Color.LightCoral);
         }
 
@@ -89,46 +89,51 @@ namespace MusicBot
             .AddSingleton<MusicService>()
             .BuildServiceProvider();
 
-        //Logging
-
-        private Task LogAsync(LogMessage logMessage)
+        private async Task LogAsync(LogMessage logMessage)
         {
-            Console.WriteLine($" {logMessage.Message}");
-            return Task.CompletedTask;
+            var date = $"[{DateTimeOffset.Now:MMM d - hh:mm:ss}]";
+
+            Console.Write("{0,-20}",$"{date}: ", Color.DarkGray);
+            Console.Write("{0,-12}",$"[{logMessage.Severity}] ", await SeverityColor(logMessage.Severity));
+            Console.Write("{0,-14}",$"{ConvertSource(logMessage.Source)} ", Color.DarkGray);
+            Console.Write("{0,-15}",$"{logMessage.Message} ", Color.White);
+            Console.Write("\n");
+            //Console.WriteLine(String.Format("{0,-20} {1,-10} {2,-10} {3,-10}", $"{date}", $"[{logMessage.Severity}]", $"{logMessage.Source}", $"{logMessage.Message}"));
+            //return Task.CompletedTask;
         }
 
-        //private string ConvertSource(string source)
-        //{
-        //    switch (source.ToLower())
-        //    {
-        //        case "discord":
-        //            return $"Discord";
-        //        case "gateway":
-        //            return "Gateway";
-        //        case "command":
-        //            return "Command";
-        //        case "rest":
-        //            return "RestSer";
-        //        default:
-        //            return source;
-        //    }
-        //}
+        private string ConvertSource(string source)
+        {
+            switch (source.ToLower())
+            {
+                case "discord":
+                    return "Discord";
+                case "gateway":
+                    return "Gateway";
+                case "command":
+                    return "Command";
+                case "rest":
+                    return "RestSer";
+                default:
+                    return source;
+            }
+        }
 
-        //private Task<Color> SeverityColor(LogSeverity severity)
-        //{
-        //    switch (severity)
-        //    {
-        //        case LogSeverity.Critical:
-        //            return Task.FromResult(Color.Red);
-        //        case LogSeverity.Error:
-        //            return Task.FromResult(Color.DarkRed);
-        //        case LogSeverity.Warning:
-        //            return Task.FromResult(Color.Yellow);
-        //        case LogSeverity.Info:
-        //            return Task.FromResult(Color.LightGreen);
-        //        default:
-        //            return Task.FromResult(Color.Lime);
-        //    }
-        //}
+        private Task<Color> SeverityColor(LogSeverity severity)
+        {
+            switch (severity)
+            {
+                case LogSeverity.Critical:
+                    return Task.FromResult(Color.Red);
+                case LogSeverity.Error:
+                    return Task.FromResult(Color.DarkRed);
+                case LogSeverity.Warning:
+                    return Task.FromResult(Color.Yellow);
+                case LogSeverity.Info:
+                    return Task.FromResult(Color.DarkSeaGreen);
+                default:
+                    return Task.FromResult(Color.LawnGreen);
+            }
+        }
     }
 }
