@@ -10,13 +10,10 @@ using MingweiSamuel.Camille;
 using MingweiSamuel.Camille.Enums;
 using MusicBot.Services;
 
-namespace MusicBot.Modules
+namespace MusicBot.Modules.League
 {
     public class League : ModuleBase<SocketCommandContext>
     {
-        private Emoji note = new Emoji("🗒️");
-        private Emoji trophy = new Emoji("🏆");
-
         [Command("elo")]
         public async Task GetElo([Remainder]string username)
         {
@@ -26,10 +23,12 @@ namespace MusicBot.Modules
             try
             {
                 #region Basic Info
-                var riotApi = RiotApi.NewInstance("RGAPI-02e78403-19d6-416f-af19-029fe82dfa59");
+                var riotApi = RiotApi.NewInstance(Config.bot.riotToken);
 
                 var summoner = riotApi.SummonerV4.GetBySummonerName(Region.EUW, username);
                 var summonerIconURL = "https://avatar.leagueoflegends.com/euw/" + summoner.Name.Replace(' ', '+') + ".png";
+
+                Console.WriteLine(summoner.Id);
                 #endregion
 
                 #region Summoner Rankings
@@ -116,13 +115,24 @@ namespace MusicBot.Modules
                 #endregion
 
                 #region Leaderboards
-                //var leader = riotApi.LeagueV4.GetChallengerLeague(Region.EUW, Queue.RANKED_SOLO_5x5).Entries;
-                //foreach(var a in leader)
-                //{
-                //    Console.WriteLine("Summoner: " + a.SummonerName + " LP: " + a.LeaguePoints + " Wins: " + a.Wins + " Loss: " + a.Losses);
-                //}
+
+                List<Summoner> list = new List<Summoner>();
+                var leader = riotApi.LeagueV4.GetChallengerLeague(Region.EUW, Queue.Te).Entries;
+                var rank = 1;
+                foreach (var a in leader)
+                {
+                    
+                    list.Add(new Summoner(a.SummonerName, a.LeaguePoints, a.Wins, a.Losses));
+                    list = list.OrderBy(x => x.LeaguePoints).ToList();
+                    list.Reverse();
+                }
+                list.ForEach(y => Console.WriteLine("{0,3}) {1,-16} {2,10}LP {3,10}W {4,10}L {5,10}%",rank++, y.SummonerName, y.LeaguePoints, y.Wins, y.Losses, 
+                    Convert.ToDouble(String.Format("{0:.##}", ((double)y.Wins / (double)(y.Wins + y.Losses)) * 100))));
+
                 #endregion
 
+
+                #region embed
                 var embed = new EmbedBuilder()
                     .WithTitle($"*{username}'s league profile*")
                     .WithColor(new Color(237, 61, 125))
@@ -136,6 +146,8 @@ namespace MusicBot.Modules
                     .AddField("Recent Games", history, true)
                     .WithFooter("Reviewed by " + Context.User.Username, Context.User.GetAvatarUrl());
                 await Context.Channel.SendMessageAsync(embed: embed.Build());
+
+                #endregion
             }
             catch (Exception ex)
             {
@@ -144,132 +156,132 @@ namespace MusicBot.Modules
             }
         }
 
-        public string RunesIdIntoString(long Id)
-        {
-            string rune = "";
-            switch(Id)
-            {
-                /*
-                 * To-Do:
-                 * 
-                 * Check numbers again since new api gave 5 digits on runes reforged (All)
-                 * Also check perks (vars) 0-6
-                */
-                #region Precision
-                case 8000: rune = "Precision"; break;
+        //public string RunesIdIntoString(long Id)
+        //{
+        //    string rune = "";
+        //    switch(Id)
+        //    {
+        //        /*
+        //         * To-Do:
+        //         * 
+        //         * Check numbers again since new api gave 5 digits on runes reforged (All)
+        //         * Also check perks (vars) 0-6
+        //        */
+        //        #region Precision
+        //        case 8000: rune = "Precision"; break;
                 
-                //Keystones
-                case 8005: rune = "Press the Attack"; break;
-                case 8008: rune = "Lethal Tempo"; break;
-                case 8010: rune = "Conquerer"; break;
-                case 8021: rune = "Fleet Footwork"; break;
+        //        //Keystones
+        //        case 8005: rune = "Press the Attack"; break;
+        //        case 8008: rune = "Lethal Tempo"; break;
+        //        case 8010: rune = "Conquerer"; break;
+        //        case 8021: rune = "Fleet Footwork"; break;
                 
-                //Extra Perks
-                case 9109: rune = "Overheal"; break;
-                case 9111: rune = "Triumph"; break;
-                case 8009: rune = "Presence of Mind"; break;
+        //        //Extra Perks
+        //        case 9109: rune = "Overheal"; break;
+        //        case 9111: rune = "Triumph"; break;
+        //        case 8009: rune = "Presence of Mind"; break;
 
-                case 9104: rune = "Legend: Alacrity"; break;
-                case 9105: rune = "Legend: Tenacity"; break;
-                case 9103: rune = "Legend: Bloodline"; break;
+        //        case 9104: rune = "Legend: Alacrity"; break;
+        //        case 9105: rune = "Legend: Tenacity"; break;
+        //        case 9103: rune = "Legend: Bloodline"; break;
 
-                case 8014: rune = "Coup de Grace"; break;
-                case 8017: rune = "Cut Down"; break;
-                case 8299: rune = "Last Stand"; break;
+        //        case 8014: rune = "Coup de Grace"; break;
+        //        case 8017: rune = "Cut Down"; break;
+        //        case 8299: rune = "Last Stand"; break;
 
-                #endregion
+        //        #endregion
 
-                #region Domination
-                case 8100: rune = "Domination"; break;
+        //        #region Domination
+        //        case 8100: rune = "Domination"; break;
 
-                //Keystones
-                case 8112: rune = "Electrocute"; break;
-                case 8124: rune = "Predator"; break;
-                case 8128: rune = "Dark Harvest"; break;
-                case 9923: rune = "Hail of Blades"; break;
+        //        //Keystones
+        //        case 8112: rune = "Electrocute"; break;
+        //        case 8124: rune = "Predator"; break;
+        //        case 8128: rune = "Dark Harvest"; break;
+        //        case 9923: rune = "Hail of Blades"; break;
 
-                //Extra Perks
-                case 8126: rune = "Cheap Shot"; break;
-                case 8139: rune = "Taste of Blood"; break;
-                case 8143: rune = "Sudden Impact"; break;
+        //        //Extra Perks
+        //        case 8126: rune = "Cheap Shot"; break;
+        //        case 8139: rune = "Taste of Blood"; break;
+        //        case 8143: rune = "Sudden Impact"; break;
 
-                case 8136: rune = "Zombie Ward"; break;
-                case 8120: rune = "Ghost Poro"; break;
-                case 8138: rune = "Eyeball Collection"; break;
+        //        case 8136: rune = "Zombie Ward"; break;
+        //        case 8120: rune = "Ghost Poro"; break;
+        //        case 8138: rune = "Eyeball Collection"; break;
 
-                case 8135: rune = "Ravenous Hunter"; break;
-                case 8134: rune = "Ingenious Hunter"; break;
-                case 8105: rune = "Relentless Hunter"; break;
-                case 8106: rune = "Ultimate Hunter"; break;
-                #endregion
+        //        case 8135: rune = "Ravenous Hunter"; break;
+        //        case 8134: rune = "Ingenious Hunter"; break;
+        //        case 8105: rune = "Relentless Hunter"; break;
+        //        case 8106: rune = "Ultimate Hunter"; break;
+        //        #endregion
 
-                #region Sorcery
-                case 8200: rune = "Sorcery"; break;
+        //        #region Sorcery
+        //        case 8200: rune = "Sorcery"; break;
 
-                //Keystones
-                case 8214: rune = "Summon Aery"; break;
-                case 8229: rune = "Arcane Comet"; break;
-                case 8230: rune = "Phase Rush"; break;
+        //        //Keystones
+        //        case 8214: rune = "Summon Aery"; break;
+        //        case 8229: rune = "Arcane Comet"; break;
+        //        case 8230: rune = "Phase Rush"; break;
 
-                //Extra Perks
-                case 8224: rune = "Nullifying Orb"; break;
-                case 8226: rune = "Manaflow Band"; break;
-                case 8275: rune = "Nimbus Cloak"; break;
+        //        //Extra Perks
+        //        case 8224: rune = "Nullifying Orb"; break;
+        //        case 8226: rune = "Manaflow Band"; break;
+        //        case 8275: rune = "Nimbus Cloak"; break;
 
-                case 8210: rune = "Transcndence"; break;
-                case 8234: rune = "Celerity"; break;
-                case 8233: rune = "Absolute Focus"; break;
+        //        case 8210: rune = "Transcndence"; break;
+        //        case 8234: rune = "Celerity"; break;
+        //        case 8233: rune = "Absolute Focus"; break;
 
-                case 8237: rune = "Scorch"; break;
-                case 8232: rune = "Waterwalking"; break;
-                case 8236: rune = "Gathering Storm"; break;
-                #endregion
+        //        case 8237: rune = "Scorch"; break;
+        //        case 8232: rune = "Waterwalking"; break;
+        //        case 8236: rune = "Gathering Storm"; break;
+        //        #endregion
 
-                #region Resolve
-                case 8400: rune = "Resolve"; break;
+        //        #region Resolve
+        //        case 8400: rune = "Resolve"; break;
 
-                //Keystones
-                case 8437: rune = "Grasp of the Undying"; break;
-                case 8439: rune = "Aftershock"; break;
-                case 8465: rune = "Guardian"; break;
+        //        //Keystones
+        //        case 8437: rune = "Grasp of the Undying"; break;
+        //        case 8439: rune = "Aftershock"; break;
+        //        case 8465: rune = "Guardian"; break;
 
-                //Extra Perks
-                case 8446: rune = "Demolish"; break;
-                case 8462: rune = "Font of Life"; break;
-                case 8401: rune = "Shield Bash"; break;
+        //        //Extra Perks
+        //        case 8446: rune = "Demolish"; break;
+        //        case 8462: rune = "Font of Life"; break;
+        //        case 8401: rune = "Shield Bash"; break;
 
-                case 8429: rune = "Conditioning"; break;
-                case 8444: rune = "Second Wind"; break;
-                case 8473: rune = "Bone Plating"; break;
+        //        case 8429: rune = "Conditioning"; break;
+        //        case 8444: rune = "Second Wind"; break;
+        //        case 8473: rune = "Bone Plating"; break;
 
-                case 8451: rune = "Overgrowth"; break;
-                case 8453: rune = "Revitalize"; break;
-                case 8242: rune = "Unflinching"; break;
-                #endregion
+        //        case 8451: rune = "Overgrowth"; break;
+        //        case 8453: rune = "Revitalize"; break;
+        //        case 8242: rune = "Unflinching"; break;
+        //        #endregion
 
-                #region Inspiration
-                case 8300: rune = "Inspiration"; break;
+        //        #region Inspiration
+        //        case 8300: rune = "Inspiration"; break;
 
-                //Keystones
-                case 8351: rune = "Glacial Augment"; break;
-                case 8359: rune = "Kleptomancy"; break;
-                case 8360: rune = "Unsealed Spellbook"; break;
+        //        //Keystones
+        //        case 8351: rune = "Glacial Augment"; break;
+        //        case 8359: rune = "Kleptomancy"; break;
+        //        case 8360: rune = "Unsealed Spellbook"; break;
 
-                //Extra Perks
-                case 8306: rune = "Hextech Flashtraption"; break;
-                case 8304: rune = "Magical Footwear"; break;
-                case 8313: rune = "Perfect Timing/"; break;
+        //        //Extra Perks
+        //        case 8306: rune = "Hextech Flashtraption"; break;
+        //        case 8304: rune = "Magical Footwear"; break;
+        //        case 8313: rune = "Perfect Timing/"; break;
 
-                case 8321: rune = "Future's Market"; break;
-                case 8316: rune = "Minion Dematerializier"; break;
-                case 8345: rune = "Biscuit Delivery"; break;
+        //        case 8321: rune = "Future's Market"; break;
+        //        case 8316: rune = "Minion Dematerializier"; break;
+        //        case 8345: rune = "Biscuit Delivery"; break;
 
-                case 8347: rune = "Cosmic Insight"; break;
-                case 8410: rune = "Approach Velocity"; break;
-                case 8352: rune = "Time Warp Tonic"; break;
-                    #endregion
-            }
-            return rune;
-        }
+        //        case 8347: rune = "Cosmic Insight"; break;
+        //        case 8410: rune = "Approach Velocity"; break;
+        //        case 8352: rune = "Time Warp Tonic"; break;
+        //            #endregion
+        //    }
+        //    return rune;
+        //}
     }
 }
