@@ -10,8 +10,11 @@ NuGet packages used:
 
 Commands:
   League:
+  
     @pm nudes elo <summonerName>
+  
   Music:
+  
     @pm nudes join
     @pm nudes move
     @pm nudes leave
@@ -24,12 +27,16 @@ Commands:
     @pm nudes songinfo or @pm nudes current
     @pm nudes queue
     @pm nudes clearqueue or @pm nudes cq
+    
   Discord:
+  
     @pm nudes profile or @pm nudes profile <name>
     @pm nudes guild
     @pm nudes +rep <name>
     @pm nudes -rep <name>
+    
   Extra:
+  
     @pm nudes movie <name>
     @pm nudes anime <name>
     @pm nudes gif
