@@ -117,7 +117,7 @@ namespace MusicBot.Modules.League
                 #region Leaderboards
 
                 List<Summoner> list = new List<Summoner>();
-                var leader = riotApi.LeagueV4.GetChallengerLeague(Region.EUW, Queue.Te).Entries;
+                var leader = riotApi.LeagueV4.GetChallengerLeague(Region.EUW, Queue.RANKED_SOLO_5x5).Entries;
                 var rank = 1;
                 foreach (var a in leader)
                 {
@@ -126,7 +126,7 @@ namespace MusicBot.Modules.League
                     list = list.OrderBy(x => x.LeaguePoints).ToList();
                     list.Reverse();
                 }
-                list.ForEach(y => Console.WriteLine("{0,3}) {1,-16} {2,10}LP {3,10}W {4,10}L {5,10}%",rank++, y.SummonerName, y.LeaguePoints, y.Wins, y.Losses, 
+                list.ForEach(y => Console.WriteLine("{0,3}) {1,-16} {2,10}LP {3,10}W {4,10}L {5,-10}%",rank++, y.SummonerName, y.LeaguePoints, y.Wins, y.Losses, 
                     Convert.ToDouble(String.Format("{0:.##}", ((double)y.Wins / (double)(y.Wins + y.Losses)) * 100))));
 
                 #endregion
