@@ -1,5 +1,4 @@
-# discord-bot-dot-net-core-
-Discord Bot written in C# with different features.
+# Discord Bot written in C#
 
 NuGet packages used:
 - Discord.Net v2.1.1
