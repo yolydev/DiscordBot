@@ -18,6 +18,5 @@ namespace MusicBot.Modules.League
             Wins = wins;
             Losses = losses;
         }
-
     }
 }

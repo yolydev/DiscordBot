@@ -15,7 +15,7 @@ namespace MusicBot.Modules.League
     public class League : ModuleBase<SocketCommandContext>
     {
         [Command("elo")]
-        public async Task GetElo([Remainder]string username)
+        public async Task GetEloAsync([Remainder]string username)
         {
             SocketGuildUser user = (SocketGuildUser)Context.User;
             var userAvatar = user.GetAvatarUrl();
@@ -26,9 +26,14 @@ namespace MusicBot.Modules.League
                 var riotApi = RiotApi.NewInstance(Config.bot.riotToken);
 
                 var summoner = riotApi.SummonerV4.GetBySummonerName(Region.EUW, username);
-                var summonerIconURL = "https://avatar.leagueoflegends.com/euw/" + summoner.Name.Replace(' ', '+') + ".png";
+                var summonerIconURL = $"http://ddragon.leagueoflegends.com/cdn/9.15.1/img/profileicon/{summoner.ProfileIconId}.png";
 
-                Console.WriteLine(summoner.Id);
+                //var xx = riotApi.LeagueV4.GetLeagueEntries(Region.EUW, "RANKED_TFT", "MASTER", "I");
+                //foreach(var x in xx) 
+                //{
+                //    Console.WriteLine($"Name: {x.SummonerName} {x.Tier} {x.Rank} {x.LeaguePoints}LP {x.Wins}W {x.Losses}L");
+                //}
+                //Console.WriteLine(summoner.Id);
                 #endregion
 
                 #region Summoner Rankings
@@ -94,16 +99,16 @@ namespace MusicBot.Modules.League
                 //{
                 //    Console.WriteLine(RunesIdIntoString(a.Perks.PerkStyle) + " - " + RunesIdIntoString(a.Perks.PerkIds[0]) + " - " + RunesIdIntoString(a.Perks.PerkSubStyle));
                 //}
-                var status = "";
-                try
-                {
-                    var currentGame = await riotApi.SpectatorV4.GetCurrentGameInfoBySummonerAsync(Region.EUW, summoner.Id);
-                    status = $"In game {currentGame.GameId}";
-                }
-                catch (Exception ex)
-                {
-                    status = "Not in game";
-                }
+                //var status = "";
+                //try
+                //{
+                //    var currentGame = await riotApi.SpectatorV4.GetCurrentGameInfoBySummonerAsync(Region.EUW, summoner.Id);
+                //    status = $"In game {currentGame.GameId}";
+                //}
+                //catch
+                //{
+                //    status = "Not in game";
+                //}
                 #endregion
 
                 #region League Status
@@ -115,22 +120,20 @@ namespace MusicBot.Modules.League
                 #endregion
 
                 #region Leaderboards
+                //WORKING
+                //List<Summoner> list = new List<Summoner>();
+                //var leader = riotApi.LeagueV4.GetChallengerLeague(Region.EUW, Queue.RANKED_SOLO_5x5).Entries;
+                //var rank = 1;
+                //foreach (var a in leader)
+                //{
 
-                List<Summoner> list = new List<Summoner>();
-                var leader = riotApi.LeagueV4.GetChallengerLeague(Region.EUW, Queue.RANKED_SOLO_5x5).Entries;
-                var rank = 1;
-                foreach (var a in leader)
-                {
-                    
-                    list.Add(new Summoner(a.SummonerName, a.LeaguePoints, a.Wins, a.Losses));
-                    list = list.OrderBy(x => x.LeaguePoints).ToList();
-                    list.Reverse();
-                }
-                list.ForEach(y => Console.WriteLine("{0,3}) {1,-16} {2,10}LP {3,10}W {4,10}L {5,-10}%",rank++, y.SummonerName, y.LeaguePoints, y.Wins, y.Losses, 
-                    Convert.ToDouble(String.Format("{0:.##}", ((double)y.Wins / (double)(y.Wins + y.Losses)) * 100))));
-
+                //    list.Add(new Summoner(a.SummonerName, a.LeaguePoints, a.Wins, a.Losses));
+                //    list = list.OrderBy(x => x.LeaguePoints).ToList();
+                //    list.Reverse();
+                //}
+                //list.ForEach(y => Console.WriteLine("{0,3}) {1,-16} {2,10}LP {3,10}W {4,10}L {5,-10}%", rank++, y.SummonerName, y.LeaguePoints, y.Wins, y.Losses,
+                //    Convert.ToDouble(String.Format("{0:.##}", ((double)y.Wins / (double)(y.Wins + y.Losses)) * 100))));
                 #endregion
-
 
                 #region embed
                 var embed = new EmbedBuilder()
@@ -142,17 +145,51 @@ namespace MusicBot.Modules.League
                         $"**W/L** {soloDuo.Wins}W / {soloDuo.Losses}L\n" +
                         $"**Win Ratio** {winRatio}%", true)
                     .AddField("Champions", $"{result}", true)
-                    .AddField("Status", status)
+                    //.AddField("Status", status)
                     .AddField("Recent Games", history, true)
                     .WithFooter("Reviewed by " + Context.User.Username, Context.User.GetAvatarUrl());
                 await Context.Channel.SendMessageAsync(embed: embed.Build());
-
                 #endregion
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 await Context.Channel.SendMessageAsync("Error, please contact an administrator.");
+            }
+        }
+
+
+        [Command("tft")]
+        public async Task GetTFTAsync([Remainder] string username)
+        {
+            try
+            {
+                var riotApi = RiotApi.NewInstance(Config.bot.riotToken);
+
+                var summoner = riotApi.SummonerV4.GetBySummonerName(Region.EUW, username);
+                var summonerIconURL = $"http://ddragon.leagueoflegends.com/cdn/9.15.1/img/profileicon/{summoner.ProfileIconId}.png";
+
+                var ranks = riotApi.LeagueV4.GetLeagueEntriesForSummoner(Region.EUW, summoner.Id);
+                var tft = ranks.FirstOrDefault(xx => xx.QueueType == "RANKED_TFT");
+
+                var winRatio = Convert.ToDouble(String.Format("{0:.##}", ((double)tft.Wins / (double)(tft.Wins + tft.Losses)) * 100));
+
+                #region embed
+                var embed = new EmbedBuilder()
+                    .WithTitle($"{username}'s league profile")
+                    .WithColor(new Color(237, 61, 125))
+                    .WithThumbnailUrl(summonerIconURL)
+                    .AddField("Elo",
+                        $"**TFT** {tft.Tier} {tft.Rank} **|** {tft.LeaguePoints} LP\n\n" +
+                        $"**W/L** {tft.Wins}W / {tft.Losses}L\n" +
+                        $"**Win Ratio** {winRatio}%", true)
+                    .WithFooter("Reviewed by " + Context.User.Username, Context.User.GetAvatarUrl());
+                await Context.Channel.SendMessageAsync(embed: embed.Build());
+                #endregion
+            }
+            catch
+            {
+                await ReplyAsync("User unranked or not found.");
             }
         }
 
@@ -169,13 +206,13 @@ namespace MusicBot.Modules.League
         //        */
         //        #region Precision
         //        case 8000: rune = "Precision"; break;
-                
+
         //        //Keystones
         //        case 8005: rune = "Press the Attack"; break;
         //        case 8008: rune = "Lethal Tempo"; break;
         //        case 8010: rune = "Conquerer"; break;
         //        case 8021: rune = "Fleet Footwork"; break;
-                
+
         //        //Extra Perks
         //        case 9109: rune = "Overheal"; break;
         //        case 9111: rune = "Triumph"; break;

@@ -31,7 +31,6 @@ namespace MusicBot
             _client.MessageReceived += HandleMessageAsync;
         }
 
-
         private async Task AnnounceUserJoin(SocketGuildUser user)
         {
             var channel = _client.GetChannel(494934565337694222) as SocketTextChannel;

@@ -10,6 +10,7 @@ using MusicBot.Services;
 using Victoria;
 using Console = Colorful.Console;
 using Color = System.Drawing.Color;
+using MusicBot.Modules;
 
 namespace MusicBot
 {
@@ -45,7 +46,7 @@ namespace MusicBot
             var cmdHandler = new CommandHandler(_client, _cmdService, _services);
 
             await cmdHandler.InitializeAsync();
-            await _services.GetRequiredService<MusicService>().InitializeAsync();
+            //await _services.GetRequiredService<MusicService>().InitializeAsync();
             await Task.Delay(-1);
         }
 
@@ -86,7 +87,7 @@ namespace MusicBot
             .AddSingleton(_cmdService)
             .AddSingleton<LavaRestClient>()
             .AddSingleton<LavaSocketClient>()
-            .AddSingleton<MusicService>()
+            //.AddSingleton<MusicService>()
             .BuildServiceProvider();
 
         private async Task LogAsync(LogMessage logMessage)
