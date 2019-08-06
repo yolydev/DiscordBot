@@ -79,7 +79,7 @@ namespace MusicBot.Modules.League
                     history += win ? $"Win - lvl **{level}** - {champ.Name()} **{kills}**/{deaths}/**{assists}** » ({kda}KDA) - [{cs}**CS** / {visionScore}**VS**]\n": 
                                      $"Loss - lvl **{level}** - {champ.Name()} **{kills}**/{deaths}/**{assists}** » ({kda}KDA) - [{cs}**CS** / {visionScore}**VS**]\n";
                 }
-                #endregion
+                #endregion 
 
                 #region Summoner Status
                 /*
