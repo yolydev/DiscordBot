@@ -15,12 +15,12 @@ namespace MusicBot.Modules.League
     public class League : ModuleBase<SocketCommandContext>
     {
         [Command("elo")]
-        public async Task GetEloAsync([Remainder]string username)
+        public async Task GetEloAsync([Remainder]string username) 
         {
             SocketGuildUser user = (SocketGuildUser)Context.User;
             var userAvatar = user.GetAvatarUrl();
 
-            try
+            try 
             {
                 #region Basic Info
                 var riotApi = RiotApi.NewInstance(Config.bot.riotToken);

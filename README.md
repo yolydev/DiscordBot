@@ -14,8 +14,6 @@ Commands:
 
         @pm nudes elo <summonerName>
 
-Currently Unavailable {
-
       Music:
 
         @pm nudes join
@@ -30,9 +28,7 @@ Currently Unavailable {
         @pm nudes songinfo or @pm nudes current
         @pm nudes queue
         @pm nudes clearqueue or @pm nudes cq
-        
-        }
-        
+
       Discord:
 
         @pm nudes profile or @pm nudes profile <name>
