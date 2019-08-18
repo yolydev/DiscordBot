@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,8 @@ using Discord.WebSocket;
 using MingweiSamuel.Camille;
 using MingweiSamuel.Camille.Enums;
 using MusicBot.Services;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MusicBot.Modules.League
 {
@@ -193,6 +196,28 @@ namespace MusicBot.Modules.League
             }
         }
 
+
+        [Command("champion")]
+        public async Task GetChampion()
+        {
+            string json = File.ReadAllText("Resources/championFull.json");
+            var info = JsonConvert.DeserializeObject<Data>(json);
+            foreach(var a in info.data)
+            {
+                Console.WriteLine(a);
+            }
+            //List<string> list = new List<string>();
+
+            //foreach(var a in info.data)
+            //{
+            //    list.Add(a.ToString());
+            //    Console.WriteLine(a);
+            //}
+
+           
+
+        }
+
         //public string RunesIdIntoString(long Id)
         //{
         //    string rune = "";
@@ -320,5 +345,10 @@ namespace MusicBot.Modules.League
         //    }
         //    return rune;
         //}
+    }
+
+    public class Data
+    {
+        public List<string> data { get; set; }
     }
 }
